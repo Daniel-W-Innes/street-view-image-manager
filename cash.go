@@ -19,28 +19,28 @@ type Point struct {
 
 func (c *Cash) add(request DownloadRequest, img image.Image) {
 	c.mux.RLock()
-	if point, ok := c.pointCash[request.location]; ok {
+	if point, ok := c.pointCash[request.Location]; ok {
 		defer c.mux.RUnlock()
 		point.mux.Lock()
 		defer point.mux.Unlock()
-		point.images[request.angle] = img
+		point.images[request.Angle] = img
 	} else {
 		c.mux.RUnlock()
 		p := Point{distance: math.MaxFloat64, images: make(map[int]image.Image)}
-		p.images[request.angle] = img
+		p.images[request.Angle] = img
 		c.mux.Lock()
 		defer c.mux.Unlock()
-		c.pointCash[request.location] = &p
+		c.pointCash[request.Location] = &p
 	}
 }
 
 func (c *Cash) has(request DownloadRequest) bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	if point, ok := c.pointCash[request.location]; ok {
+	if point, ok := c.pointCash[request.Location]; ok {
 		point.mux.RLock()
 		defer point.mux.RUnlock()
-		_, ok = point.images[request.angle]
+		_, ok = point.images[request.Angle]
 		return ok
 	}
 	return false
@@ -74,7 +74,7 @@ func (c *Cash) getAndClean(request DownloadRequest) image.Image {
 	minDistance := math.MaxFloat64
 	var next image.Image
 	for l, point := range c.pointCash {
-		newDistance, img, remove, newNext := point.update(l, request.location, request.angle, minDistance)
+		newDistance, img, remove, newNext := point.update(l, request.Location, request.Angle, minDistance)
 		if newNext {
 			minDistance = newDistance
 			next = img

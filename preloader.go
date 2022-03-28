@@ -34,7 +34,7 @@ func (l Location) distance(location Location) float64 {
 type Metadata struct {
 	Copyright string   `json:"copyright,omitempty"`
 	Date      string   `json:"date,omitempty"`
-	Location  Location `json:"location"`
+	Location  Location `json:"Location"`
 	PanoId    string   `json:"pano_id,omitempty"`
 	Status    string   `json:"status,omitempty"`
 }
@@ -42,31 +42,31 @@ type Metadata struct {
 const angleTolerance = 10
 
 func repeatForAngleTolerance(downloadRequest DownloadRequest, output chan<- DownloadRequest) {
-	minAngle := downloadRequest.angle - angleTolerance/2
-	maxAngle := downloadRequest.angle + angleTolerance/2
+	minAngle := downloadRequest.Angle - angleTolerance/2
+	maxAngle := downloadRequest.Angle + angleTolerance/2
 	if minAngle < 0 {
 		for i := 0; i < maxAngle; i++ {
-			output <- DownloadRequest{location: downloadRequest.location, angle: i}
+			output <- DownloadRequest{Location: downloadRequest.Location, Angle: i}
 		}
 		for i := 360 + minAngle; i < 360; i++ {
-			output <- DownloadRequest{location: downloadRequest.location, angle: i}
+			output <- DownloadRequest{Location: downloadRequest.Location, Angle: i}
 		}
 	} else if maxAngle > 360 {
 		for i := 0; i < (360 - maxAngle); i++ {
-			output <- DownloadRequest{location: downloadRequest.location, angle: i}
+			output <- DownloadRequest{Location: downloadRequest.Location, Angle: i}
 		}
 		for i := 360; i > minAngle; i++ {
-			output <- DownloadRequest{location: downloadRequest.location, angle: i}
+			output <- DownloadRequest{Location: downloadRequest.Location, Angle: i}
 		}
 	} else {
 		for i := minAngle; i < maxAngle; i++ {
-			output <- DownloadRequest{location: downloadRequest.location, angle: i}
+			output <- DownloadRequest{Location: downloadRequest.Location, Angle: i}
 		}
 	}
 }
 
 func getMetadata(location Location, key string) (*Metadata, error) {
-	response, err := http.Get(fmt.Sprintf("https://maps.googleapis.com/maps/api/streetview/metadata?location=%s&key=%s", location.toString(), key))
+	response, err := http.Get(fmt.Sprintf("https://maps.googleapis.com/maps/api/streetview/metadata?Location=%s&key=%s", location.toString(), key))
 	if err != nil {
 		return nil, err
 	}
@@ -98,10 +98,10 @@ func preload(input <-chan DownloadRequest, output chan<- DownloadRequest, key st
 			close(output)
 			return
 		}
-		metadata, err := getMetadata(downloadRequest.location, key)
+		metadata, err := getMetadata(downloadRequest.Location, key)
 		if err != nil {
 			return
 		}
-		repeatForAngleTolerance(DownloadRequest{metadata.Location, downloadRequest.angle}, output)
+		repeatForAngleTolerance(DownloadRequest{metadata.Location, downloadRequest.Angle}, output)
 	}
 }
