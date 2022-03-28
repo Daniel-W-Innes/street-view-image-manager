@@ -40,7 +40,7 @@ func getImageFromGoogle(request DownloadRequest, key string) (image.Image, error
 }
 
 func getImage(request DownloadRequest, key string) (image.Image, error) {
-	path := fmt.Sprintf("Cash/%s,%d.jpg", request.Location.toString(), request.Angle)
+	path := fmt.Sprintf("~/.cache/%s,%d.jpg", request.Location.toString(), request.Angle)
 	f, err := os.Open(path)
 	if errors.Is(err, os.ErrNotExist) {
 		img, err := getImageFromGoogle(request, key)
@@ -60,18 +60,18 @@ func getImage(request DownloadRequest, key string) (image.Image, error) {
 	return img, err
 }
 
-func download(input <-chan DownloadRequest, cash *Cash, key string) {
+func download(input <-chan DownloadRequest, cache *Cache, key string) {
 	for {
 		downloadRequest, ok := <-input
 		if !ok {
 			return
 		}
-		if !cash.has(downloadRequest) {
+		if !cache.has(downloadRequest) {
 			img, err := getImage(downloadRequest, key)
 			if err != nil {
 				return
 			}
-			cash.add(downloadRequest, img)
+			cache.add(downloadRequest, img)
 		}
 	}
 }

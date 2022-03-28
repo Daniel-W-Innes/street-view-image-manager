@@ -6,9 +6,9 @@ import (
 	"sync"
 )
 
-type Cash struct {
-	mux       sync.RWMutex
-	pointCash map[Location]*Point
+type Cache struct {
+	mux        sync.RWMutex
+	pointCache map[Location]*Point
 }
 
 type Point struct {
@@ -17,9 +17,9 @@ type Point struct {
 	images   map[int]image.Image
 }
 
-func (c *Cash) add(request DownloadRequest, img image.Image) {
+func (c *Cache) add(request DownloadRequest, img image.Image) {
 	c.mux.RLock()
-	if point, ok := c.pointCash[request.Location]; ok {
+	if point, ok := c.pointCache[request.Location]; ok {
 		defer c.mux.RUnlock()
 		point.mux.Lock()
 		defer point.mux.Unlock()
@@ -30,14 +30,14 @@ func (c *Cash) add(request DownloadRequest, img image.Image) {
 		p.images[request.Angle] = img
 		c.mux.Lock()
 		defer c.mux.Unlock()
-		c.pointCash[request.Location] = &p
+		c.pointCache[request.Location] = &p
 	}
 }
 
-func (c *Cash) has(request DownloadRequest) bool {
+func (c *Cache) has(request DownloadRequest) bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	if point, ok := c.pointCash[request.Location]; ok {
+	if point, ok := c.pointCache[request.Location]; ok {
 		point.mux.RLock()
 		defer point.mux.RUnlock()
 		_, ok = point.images[request.Angle]
@@ -60,20 +60,20 @@ func (p *Point) update(l1, l2 Location, angle int, minDistance float64) (float64
 	return 0, nil, false, false
 }
 
-func (c *Cash) removeInLoop(location Location) {
+func (c *Cache) removeInLoop(location Location) {
 	c.mux.RUnlock()
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	defer c.mux.RLock()
-	delete(c.pointCash, location)
+	delete(c.pointCache, location)
 }
 
-func (c *Cash) getAndClean(request DownloadRequest) image.Image {
+func (c *Cache) getAndClean(request DownloadRequest) image.Image {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	minDistance := math.MaxFloat64
 	var next image.Image
-	for l, point := range c.pointCash {
+	for l, point := range c.pointCache {
 		newDistance, img, remove, newNext := point.update(l, request.Location, request.Angle, minDistance)
 		if newNext {
 			minDistance = newDistance

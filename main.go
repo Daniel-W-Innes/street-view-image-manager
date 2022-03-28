@@ -9,7 +9,7 @@ type Downloader struct {
 	LocationUpdater  chan DownloadRequest
 	Output           chan image.Image
 	downloadRequests chan DownloadRequest
-	cash             *Cash
+	cache            *Cache
 }
 
 type DownloadRequest struct {
@@ -17,19 +17,19 @@ type DownloadRequest struct {
 	Angle    int
 }
 
-func exporter(cash *Cash, input <-chan DownloadRequest, output chan<- image.Image) {
+func exporter(cache *Cache, input <-chan DownloadRequest, output chan<- image.Image) {
 	for {
 		downloadRequest, ok := <-input
 		if !ok {
 			close(output)
 			return
 		}
-		output <- cash.getAndClean(downloadRequest)
+		output <- cache.getAndClean(downloadRequest)
 	}
 }
 
 func (d *Downloader) Run(key string) {
 	go preload(d.Input, d.downloadRequests, key)
-	go download(d.downloadRequests, d.cash, key)
-	go exporter(d.cash, d.LocationUpdater, d.Output)
+	go download(d.downloadRequests, d.cache, key)
+	go exporter(d.cache, d.LocationUpdater, d.Output)
 }
