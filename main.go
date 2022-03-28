@@ -14,7 +14,7 @@ type Downloader struct {
 
 type DownloadRequest struct {
 	Location Location
-	Angle    uint16
+	Angle    int
 }
 
 func exporter(cash *Cash, input <-chan DownloadRequest, output chan<- image.Image) {
