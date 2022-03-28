@@ -2,7 +2,6 @@ package manager
 
 import (
 	"image"
-	"time"
 )
 
 type Downloader struct {
@@ -19,8 +18,7 @@ type DownloadRequest struct {
 }
 
 func exporter(cash *Cash, input <-chan DownloadRequest, output chan<- image.Image) {
-	ticker := time.NewTicker(1 / 60 * time.Second)
-	for range ticker.C {
+	for {
 		downloadRequest, ok := <-input
 		if !ok {
 			close(output)
